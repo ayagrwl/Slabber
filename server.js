@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const http = require('http');
 const container = require('./container');
-
+const port = process.env.PORT || 3000
 
 
 container.resolve(function(users){
@@ -12,8 +12,8 @@ container.resolve(function(users){
     function setupExpress(){
         const app = express();
         const server = http.createServer(app);
-        server.listen(3000,function(){
-            console.log("Listening to port 3000");
+        server.listen(port,function(){
+            console.log("Listening to port "+port);
         });
 
         ConfigureExpress(app);

@@ -18,8 +18,8 @@ passport.use('local-signup',new LocalStrategy({
     usernameField:'email',
     passwordField:'password',
     passReqToCallback:true
-}, (req,email,password,done)=>{
-    User.findOne({'email':email, 'password':password}, (err,user=>{
+    }, (req,email,password,done)=>{
+    User.findOne({'email':email, 'password':password}, (err,user)=>{
         if(err){
             return done(err);
         }
@@ -35,6 +35,6 @@ passport.use('local-signup',new LocalStrategy({
         newUser.save((err)=>{
             done(null,newUser);
         })
-    }));
+    });
 
 }))

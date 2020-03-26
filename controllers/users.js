@@ -1,13 +1,12 @@
 'use strict';
 const passport = require('passport');
 
-
 module.exports = function(_){
 
     return {
         SetRouting : function(router){
             router.get('/',(req,res)=>{
-                return res.render('index');
+                return res.render('index', {test:"This is a variable"});
             }),
             router.get('/signup', (req,res)=>{
                 return res.render('signup');
