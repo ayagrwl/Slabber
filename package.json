@@ -18,5 +18,9 @@
   },
   "homepage": "https://github.com/ayagrwl/Slabber#readme",
   "dependencies": {
+    "express": "^4.17.1",
+    "mongodb": "^3.5.7",
+    "mongoose": "^5.9.15",
+    "socket.io": "^2.3.0"
   }
 }
