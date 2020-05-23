@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat app</title>
+    </head>
+    <body>
+        <center><h1>Chat App</h1></center>
+        <script src="../socket.io/socket.io.js"></script>
+        <script>
+            const socket = io();
+            socket.emit('hemlo', {text: 'fuck'});
+        </script>
+    </body>
+</html>
