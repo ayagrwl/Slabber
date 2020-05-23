@@ -19,7 +19,7 @@ passport.use('local-signup',new LocalStrategy({
     passwordField:'password',
     passReqToCallback:true
     }, (req,email,password,done)=>{
-    User.findOne({'email':email, 'password':password}, (err,user)=>{
+    User.findOne({'email':email}, (err,user)=>{
         if(err){
             return done(err);
         }
@@ -37,4 +37,29 @@ passport.use('local-signup',new LocalStrategy({
         })
     });
 
-}))
+}));
+
+passport.use('local-login',new LocalStrategy({
+    usernameField:'email',
+    passwordField:'password',
+    passReqToCallback:true
+    }, (req,email,password,done)=>{
+        User.findOne({'email':email}, (err,user)=>{
+            if(err){
+                return done(err);
+            }
+            const messages = [];
+            if(!user){
+                messages.push("Email does not exist");
+                done(null,false,req,messages);
+            }
+            if(!user.validPassword(password)){
+                messages.push("Incorrect Password");
+                done(null,false,req,messages);
+            }
+            return done(null,user);
+
+            
+        });
+
+    }));

@@ -1,2 +1,6 @@
 node_modules
 node_modules_bak
+keystore.creds
+release.keystore.bak
+/views
+/public
