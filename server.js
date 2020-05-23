@@ -11,6 +11,9 @@ app.use(express.static(path.join(__dirname, 'template')));
 app.use('/', chatroom.app);
 
 chatroom.socket(io);
+/*io.of('/admin').on('connection', (socket) => {
+    console.log('fuck! admin is here');
+});*/
 
 /*io.on('connection', socket => {
     console.log("a user connected :D");

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat app</title>
+    </head>
+    <body>
+        <p id="adminId"><%=admin%></p>
+        <center><h1>Admin</h1></center>
+        <div id="chat-messages">
+
+        </div>
+        <div id="send-message">
+            <div>
+                <input id="write-message" type="text" placeholder="write message...">
+            </div>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <script src="../socket.io/socket.io.js"></script>
+        <script>
+            const adminId = document.getElementById('adminId');
+            const socket = io('/admin/'+adminId.innerHTML);
+            var msg = '';
+            adminId.style.display = 'None';
+
+            function sendMessage() {
+                msg = document.getElementById('write-message').value;
+                socket.emit('msg', msg);
+            }
+
+            socket.on('hemlo', (data) => {
+                console.log(data);
+                socket.emit('hemlo', 'fuck you');
+            });
+        </script>
+    </body>
+</html>
