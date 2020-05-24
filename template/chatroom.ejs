@@ -2,10 +2,15 @@
 <html>
     <head>
         <title>Chat app</title>
+        <style>
+            #chat-messages {
+                display: flex;
+                flex-direction: column;
+            }
+        </style>
     </head>
     <body>
-        <p id="adminId"><%=admin%></p>
-        <center><h1>Admin</h1></center>
+        <center><h1><%=roomname%></h1></center>
         <div id="chat-messages">
 
         </div>
@@ -17,19 +22,18 @@
         </div>
         <script src="../socket.io/socket.io.js"></script>
         <script>
-            const adminId = document.getElementById('adminId');
-            const socket = io('/admin/'+adminId.innerHTML);
+            var roomid = JSON.parse("<%=room%>");
+            const socket = io('/chatroom/'+roomid);
             var msg = '';
-            adminId.style.display = 'None';
 
             function sendMessage() {
                 msg = document.getElementById('write-message').value;
-                socket.emit('msg', msg);
+                socket.emit('msg', {msg: msg, id: roomid});
             }
-
-            socket.on('hemlo', (data) => {
-                console.log(data);
-                socket.emit('hemlo', 'fuck you');
+            socket.on('msg', (data) => {
+                var node = document.createElement('div');
+                var msgdata = document.createTextNode(data);
+                document.getElementById("chat-messages").appendChild(node.appendChild(msgdata));
             });
         </script>
     </body>
