@@ -3,7 +3,8 @@
 const passport = require('passport');
 const User = require('../models/user');
 const LocalStrategy = require('passport-local').Strategy;
-
+const mailer = require('../helpers/mailer')
+const Token = require('../models/tokens')
 
 passport.serializeUser((user,done)=>{
     done(null,user.id);
@@ -27,17 +28,26 @@ passport.use('local-signup',new LocalStrategy({
             return done(null,false, req.flash('error', 'User email already Exists')); 
         }
 
-        const newUser = new User();
-        newUser.username = req.body.username;
-        newUser.email = req.body.email;
-        newUser.password = newUser.encryptPassword(req.body.password);
-
+        const newUser = new User({
+            username : req.body.username,
+            email : req.body.email,
+            password : newUser.encryptPassword(req.body.password)
+        });
         newUser.save((err)=>{
+            var newToken = new Token({
+                username: req.body.username,
+                email: req.body.email,
+                token: crypto.randomBytes(16).toString('hex')
+            }); 
+            token.save((err)=>{
+                var info = mailer.sendMail(newToken);
+                console.log(info);
+            });
             done(null,newUser);
         })
-    });
+    })
 
-}));
+}))
 
 passport.use('local-login',new LocalStrategy({
     usernameField:'email',
@@ -46,20 +56,28 @@ passport.use('local-login',new LocalStrategy({
     }, (req,email,password,done)=>{
         User.findOne({'email':email}, (err,user)=>{
             if(err){
-                return done(err);
+                return done(err)
             }
-            const messages = [];
             if(!user){
-                messages.push("Email does not exist");
-                done(null,false,req,messages);
+                done(null,false,req.flash('error',"Email does not exist"));
             }
             if(!user.validPassword(password)){
-                messages.push("Incorrect Password");
-                done(null,false,req,messages);
+                done(null,false,req.flash('error',"Incorrect Password"));
             }
-            return done(null,user);
-
-            
+            if(!user.isVerified){
+                done(null,false,req.flash('error',"This Account has not been Verified."));
+            }
+            return done(null,user);            
         });
 
-    }));
+}));
+
+// passport.use('check-check',new LocalStrategy({
+//     usernameField: 'email',
+//     passwordField: 'email',
+//     passReqToCallback: true
+//     },(req, username, password, done)=>{
+            /*check if token exists in the db for the given email, then verify the values*/ 
+// }));
+
+
