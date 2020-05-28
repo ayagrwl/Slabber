@@ -3,3 +3,4 @@ keystore.creds
 release.keystore.bak
 views
 public
+models/dbconnection.js
