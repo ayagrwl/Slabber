@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_chat_ui_starter/screens/home_screen.dart';
+import 'ChatPage.dart';
+import 'signup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(MyMaterial());
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyMaterial extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Slabber',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: Colors.lightBlue,
-        accentColor: Color(0xFFFEF9EB),
-      ),
-      home: HomeScreen(),
-    );
+    bool usedhai = false;
+    checkLogin().then((results) {
+      usedhai = results;
+    });
+    if (usedhai) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: ChatPage(),
+      );
+    } else
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SignupPage(),
+      );
   }
+}
+
+Future<bool> checkLogin() async {
+  final prefs = await SharedPreferences.getInstance();
+  final isLogged = prefs.getBool('isLogged');
+  if (isLogged == null) {
+    return false;
+  } else
+    return true;
 }
