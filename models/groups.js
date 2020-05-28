@@ -7,7 +7,10 @@ var groupSchema = mongoose.Schema({
     memberList: [{
         memberId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
         memberName: {type: String, default: ''}
+    }],
+    messages: [{
+        message: {type: mongoose.Schema.Types.ObjectId, ref: 'Message'}
     }]
 });
 
-module.exports = mongoose.Schema('Chatroom', groupSchema);
+module.exports = mongoose.model('Chatroom', groupSchema);

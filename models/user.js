@@ -1,19 +1,20 @@
-// This File Stores User details.
-
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-
+const bcrypt = require('bcrypt-nodejs');
 
 const userSchema = mongoose.Schema({
-    username: {type:String, unique:true},
-    fullname: {type:String, default:"Slabber User"},
-    email: {type:String, unique:true},
-    isVerified: {type: Boolean, default: false},
-    password: {type:String, default:''},
-    gender: {type:String, default:''},
+    username: {type: String, unique: true, default: ''},
+    fullname: {type: String, default: ''},
+    email: {type: String, unique: true},
+    password: {type: String, default: ''},
+    gender: {type: String, default: ''},
     country: {type: String, default: ''},
     sentRequest: [{
-        username: {type: String, default: ''}
+        username: {type: String, default: ''},
+        sentAt: {type: Date, default: Date.now}
+    }],
+    receivedRequest: [{
+        username: {type: String, default: ''},
+        receivedAt: {type: Date, default: Date.now}
     }],
     friendsList: [{
         friendId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
@@ -26,20 +27,15 @@ const userSchema = mongoose.Schema({
     privateChats: [{
         chatId: {type: mongoose.Schema.Types.ObjectId, ref: 'PrivateChat'},
         friendName: {type: String, default: ''}
-    }],
-    //userImage: {type:String, default:'default.png'},
-    facebook: {type:String, default:''},
-    fbtokens: Array,
-    google: {type:String, default:''},
-    googleTokens: Array
+    }]
 });
 
 userSchema.methods.encryptPassword = function(password){
-    return bcrypt.hashSync(password,bcrypt.genSaltSync(10),null)
+    return bcrypt.hashSync(password, bcrypt.genSaltSync(10), null);
 };
-userSchema.methods.validPassword = function(password){
-    return bcrypt.compareSync(password,this.password);
-}
 
+userSchema.methods.validUserPassword = function(password){
+    return bcrypt.compareSync(password, this.password);
+};
 
 module.exports = mongoose.model('User', userSchema);
