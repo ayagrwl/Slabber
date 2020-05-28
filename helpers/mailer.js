@@ -8,13 +8,13 @@ module.exports = {
             port: 587,
             secure: false, // true for 465, false for other ports
             auth: {
-                user: Account.user, // generated ethereal user
-                pass: Account.pass, // generated ethereal password
+                user: "handmedownapp1@gmail.com", // generated ethereal user
+                pass: 'hmdhmd23', // generated ethereal password
             }
         });
-        var verifyUrl = "http://localhost:3000/confirmation/?tok="+token.token+"&email="+token.email+"\n." ;
+        var verifyUrl = "http://localhost:3000/confirmation?tok="+token.token+"&email="+token.email+"\n." ;
         let info = await transporter.sendMail({
-            from: '"Slabber Services" <noreply@slabber.com>', // sender address
+            from: '"Slabber Services" <handmedownapp1@gmail.com>', // sender address
             to: token.email, // list of receivers
             subject: "Email Verification at Slabber", // Subject line
             text: "", // plain text body
