@@ -1,14 +1,11 @@
 const express = require('express');
-const passport = require('passport');
-const jwtAuth = require('./controllers/jwtAuth.js');
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
-const bodyParser = require('body-parser');
 
 
 // Required collections must have in database
-const collections = ['Users', 'Chatrooms', 'PrivateChats', 'tokens'];
+const collections = ['Users', 'Chatrooms', 'PrivateChats', 'Tokens'];
 
 // Importing created routes
 const chatRoutes = require('./routes/chats.js');
@@ -38,11 +35,6 @@ require('./socket/groupchat.js')(io);
 // Mounting routes on the app
 app.use('/', chatRoutes);
 app.use('/', userRoutes);
-app.use(bodyParser.json());
-app.use(jwtAuth);
-app.use(passport.initialize());
-app.use(passport.session());
-      
 
 const PORT = 3000 || process.env.PORT;
 

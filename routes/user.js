@@ -135,10 +135,12 @@ app.post('/resend', (req, res, next)=>{
         
 });
 
+// Send friend request
 app.post('/sendrequest', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
+        // Checking if user exists
         Users.find({username: data.findFriend}).toArray((err, items) => {
             if(items.length === 0) res.send({"error": 1, "message": "Your requested user does not exists, please try again"});
             else {
