@@ -2,12 +2,16 @@ const express = require('express');
 const app = express();
 const dbIns = require('../models/dbconnection.js');
 const user = require('../models/user.js');
+const jwt = require('jsonwebtoken');
+const mailer = require('../helpers/mailer.js');
+const token = require('../models/tokens.js');
 const ObjectId = require('mongodb').ObjectId;
+
+const privatekey = process.env.KEY || "thisisasecret";
 
 // These 2 (lines 8-9) are required to parse url parameters
 const urls = require('url');
 const querystring = require('querystring');
-
 
 app.use(express.json());
 
@@ -17,23 +21,38 @@ app.post('/login', (req, res, next) => {
     
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        // Login Verification.
-        Users.find({email: data.email}).toArray((err, item) => {
-            if(item.length === 0){
-                res.send({"error": 3, "message":"User Email Not found"});
-            } else {
-                if(!item.validUserPassword(data.password)){
-                    res.send({"error": 4, "message":"Incorrect Password"});
-                };
-                if(!item.isVerified){
-                    res.send({"error": 5, "message": "Email not verified"});
+        // Login Verification, if token exists then authentication is done instantaneously
+        if(!data.token) {
+            Users.findOne({email: data.email}).toArray((err, item) => {
+                if(item.length === 0){
+                    res.send({"error": 3, "message":"User Email Not found"});
+                } else {
+                    const newUser = new user(item[0]);
+                    newUser.isVerified = true;
+                    if(!newUser.validUserPassword(data.password)){
+                        res.send({"error": 4, "message": "Incorrect Password"});
+                    } else if(!newUser.isVerified){
+                        res.send({"error": 5, "message": "Email not verified"});
+                    } else {
+                        res.send({"error": 0, "message": "User authenticated", "token": jwt.sign({
+                            email: data.email,
+                            username: item[0].username
+                        }, privatekey)});
+                    }
                 }
-                res.send(item);
+            });
+        } else {
+            try {
+                const decoded = jwt.verify(data.token, privatekey);
+                res.send({"error": 0, "message": "User authenticated"});
+            } catch(err) {
+                res.send({"error": 1, "message": "Token is invalid"});
             }
-        });
+        }
     });
 });
 
+// Route for user signup
 app.post('/signup', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
@@ -55,7 +74,18 @@ app.post('/signup', (req, res, next) => {
                         // Hashing the user password
                         newUser.password = newUser.encryptPassword(data.password);
                         Users.insertOne(newUser, (err, result) => {
-                            res.send({"error": 0, "message": "User added successfully to the database"});
+                            const jwtToken = jwt.sign({
+                                email: data.email,
+                                username: data.username
+                            }, privatekey);
+                            const newToken = new token({
+                                username: data.username,
+                                email: data.email,
+                                token: jwtToken
+                            });
+                            const info = mailer.sendMail(newToken).then((items) => {
+                                res.send({"error": 0, "message": "User added successfully to the database", "token": jwtToken});
+                            });
                         });
                     }
                 });
@@ -64,74 +94,65 @@ app.post('/signup', (req, res, next) => {
     });
 });
 
-// Url for confirming Email
+// Route for confirming Email
 app.get('/confirmation', (req,res,next)=>{
-    let parsedUrl = urls.parse(req.url);
-    let parsedQs = querystring.parse(parsedUrl.query);
-    let user_email = parsedQs.email;
-    let tok = parsedQs.tok;
-    /*
-        U have email(String), tok(string).
-        Search the token collection for the given email
-        if tok matches then search for the user in User collection.
-        then update the isVerified property of the user to true.
+    const parsedUrl = urls.parse(req.url);
+    const parsedQs = querystring.parse(parsedUrl.query);
+    const user_email = parsedQs.email;
+    const token = parsedQs.token;
 
-        reference: code to be deleted.
-        if(!user_email || !tok){
-                req.flash('error', "Missing Auth String Credentials");
-                res.redirect('/');
-            }
-            Token.findOne({email:user_email}, async (err,stored_token)=>{
-                if(err){
-                    req.flash('error', "Token Expired or unavailable");
-                    return res.render('index', {title: 'Slabber | Login', messages: errors, hasErrors: errors.length > 0});
-                }
-                console.log(stored_token);
-                console.log(tok);
-                if(stored_token.token === tok){
-                    
-                    const result = await User.updateOne({email:user_email}, {isVerified: true});
-                    req.flash('error', "Email Verified Successfully");
-                    const errors = req.flash('errors');
-                    return res.render('index', {title: 'Slabber | Login', messages: errors, hasErrors: errors.length > 0});
-                } else {
-                    req.flash('error', "Parameters Do not Match");
-                    const errors = req.flash('error');
-                    return res.render('index', {title: 'Slabber | Login', messages: errors, hasErrors: errors.length > 0});
-                }
-            })
-    */
-    
+    if(!token || !user_email) {
+        res.send({"error": 1, "message": "User email or token not present"});
+    } else {
+        // Checking if token is valid
+        try {
+            const decoded = jwt.verify(token, privatekey);
+            if(decoded.email !== user_email) res.send({"error": 3, "message": "Token and email ids are different. Cannot process your request"});
+            dbIns.then((db) => {
+                const Users = db.collection('Users');
+                Users.find({email: user_email}).toArray((err, items) => {
+                    if(items.length === 0) res.send({"error": 4, "message": "No such user exists in database"});
+                    else {
+                        if(decoded.username !== items[0].username) res.send({"error": 3, "message": "Token and email ids are different. Cannot process your request"});
+                        else {
+                            Users.updateOne({username: decoded.username}, { $set: { isVerified: true } }).then((items) => {
+                                res.send({"error": 0, "message": "User was successfully Verified"});
+                            });
+                        }
+                    }
+                });
+            });
+        } catch(err) {
+            res.send({"error": 2, "message": "Token is invalid"});
+        }
+    }
 });
 
-// route to resend confirmation mail
+// Route to resend confirmation mail
 app.post('/resend', (req, res, next)=>{
-    const email = req.body.email;
-    /*
-    Look in token collection for given email.
-    if found call this function 
-        var info = mailer.sendMail(the_Token);
-    if not found make token as described below, save it. now call the function with newToken.
-        
-        
-        Sample Code for reference.
-        Token.findOne({email : user_email}, (err,tok)=>{
-            if(err){
-                // token epired.
-                var newToken = new Token({
-                    username: req.body.username,
-                    email: req.body.email,
-                    token: crypto.randomBytes(16).toString('hex')
-                }); 
-                token.save((err)=>{
-                    var info = mailer.sendMail(req.body.email,newToken);
-                    console.log(info);
-                });
-            } else {
-                var info = mailer.sendMail(tok.email,tok.token);
-            }
-        })    
-    */ 
+    const data = req.body;
+
+    try {
+        const decoded = jwt.verify(data.token, privatekey);
+        dbIns.then((db) => {
+            const Users = db.collection('Users');
+            Users.find({username: decoded.username}).toArray((err, items) => {
+                if(items.length === 0) res.send({"error": 1, "message": "User not found in database"});
+                else {
+                    const newToken = new token({
+                        username: decoded.username,
+                        email: decoded.email,
+                        token: data.token
+                    });
+                    const info = mailer.sendMail(newToken).then((items) => {
+                        res.send({"error": 0, "message": "Verification email sent"});
+                    });
+                }
+            });
+        });
+    } catch(err) {
+        res.send({"error": 2, "message": "Token is invalid"});
+    }
         
 });
 
@@ -192,8 +213,7 @@ app.post('/acceptrequest', (req, res, next) => {
                             "$db": "test"
                         } } });
                     }
-                })
-                .then((items) => {
+                }).then((items) => {
                     // Removing requests from both users after successfully adding them as friends
                     Users.updateOne({username: data.username}, { $pull: { receivedRequest: data.requestUsername } })
                     .then((items) => {
