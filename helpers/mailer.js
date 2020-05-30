@@ -9,7 +9,7 @@ module.exports = {
             secure: false, // true for 465, false for other ports
             auth: {
                 user: "handmedownapp1@gmail.com", // generated ethereal user
-                pass: 'hmdhmd23', // generated ethereal password
+                pass: 'qveudkqnvgyyxnjj', // generated ethereal password
             }
         });
         var verifyUrl = "http://localhost:3000/confirmation?token="+token.token+"&email="+token.email+"\n." ;
