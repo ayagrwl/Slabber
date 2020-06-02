@@ -229,4 +229,12 @@ app.post('/acceptrequest', (req, res, next) => {
     });
 });
 
+app.post('/getfiendlist', (req, res, next) => {
+
+});
+
+app.post('/getrequests', (req, res, next) => {
+
+});
+
 module.exports = app;
