@@ -229,12 +229,46 @@ app.post('/acceptrequest', (req, res, next) => {
     });
 });
 
-app.post('/getfiendlist', (req, res, next) => {
-
+app.get('/getfriendlist', (req, res, next) => {
+    const data = req.body;
+    dbIns.then((db) => {
+        const Users = db.collection('Users');
+        Users.find({username: data.username}).toArray().then(async (items) => {
+            if(items[0].friendsList.length === 0) res.send({"error": 0, "message": "You don't have any friends"});
+            else {
+                var friends = [];
+                for(var i = 0; i < items[0].friendsList.length; i++) {
+                    const friend = await Users.find({_id: items[0].friendsList[i].oid}).toArray();
+                    friends[i] = {};
+                    friends[i].username = friend[0].username;
+                    friends[i].fullname = friend[0].fullname;
+                }
+                res.send({"error": 0, "message": "Here is a list of your friends", "friends": friends});
+            }
+        });
+    });
 });
 
-app.post('/getrequests', (req, res, next) => {
+// This api will send info of all the requests sent by the user that are not yet accepted
+app.get('/getsentrequests', (req, res, next) => {
+    const data = req.body;
+    dbIns.then((db) => {
+        const Users = db.collection('Users');
+        return Users.find({username: data.username}).toArray()
+    }).then((item) => {
+        res.send({"error": 0, "message": "Here are your sent requests", "sentRequests": item[0].sentRequest});
+    });
+});
 
+// This api endpoint will send all the received requests not yet accepted by the user
+app.get('/getreceivedrequests', (req, res, next) => {
+    const data = req.body;
+    dbIns.then((db) => {
+        const Users = db.collection('Users');
+        return Users.find({username: data.username}).toArray()
+    }).then((item) => {
+        res.send({"error": 0, "message": "These are friend requests sent to you", "receivedRequests": item[0].receivedRequest});
+    });
 });
 
 module.exports = app;
