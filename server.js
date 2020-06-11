@@ -32,6 +32,9 @@ dbIns.then((db) => {
 // Importing created socket events
 require('./socket/groupchat.js')(io);
 
+// Importing New Socket server
+// require('./socket/sockets.js');
+
 // Mounting routes on the app
 app.use('/', chatRoutes);
 app.use('/', userRoutes);
