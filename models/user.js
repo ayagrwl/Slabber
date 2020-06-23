@@ -28,6 +28,9 @@ const userSchema = mongoose.Schema({
     privateChats: [{
         chatId: {type: mongoose.Schema.Types.ObjectId, ref: 'PrivateChat'},
         friendName: {type: String, default: ''}
+    }],
+    pendingMsgs: [{
+        messageId: {type: mongoose.Schema.Type.ObjectId, ref: 'Message'}
     }]
 });
 
