@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat app</title>
+        <style>
+            #chat-messages {
+                display: flex;
+                flex-direction: column;
+            }
+        </style>
+    </head>
+    <body>
+        <center><h1><%= friendName %></h1></center>
+        <div id="chat-messages">
+
+        </div>
+        <div id="send-message">
+            <div>
+                <input id="write-message" type="text" placeholder="write message...">
+            </div>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <script src="../socket.io/socket.io.js"></script>
+        <script>
+            var chatid = "<%= chat %>";
+            const socket = io();
+            var msg = '';
+            function sendMessage() {
+                msg = document.getElementById('write-message').value;
+                socket.emit('msg', {msg: msg, id: chatid});
+            }
+            socket.on('msg', (data) => {
+                var div = document.createElement('div');
+                div.id = 'msg';
+                div.innerHTML = data;
+                document.getElementById("chat-messages").appendChild(div);
+            });
+        </script>
+    </body>
+</html>
