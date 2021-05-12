@@ -31,7 +31,7 @@
     "lodash": "^4.17.15",
     "mongodb": "^3.5.8",
     "mongoose": "^5.9.15",
-    "nodemailer": "^6.4.5",
+    "nodemailer": "^6.4.16",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
